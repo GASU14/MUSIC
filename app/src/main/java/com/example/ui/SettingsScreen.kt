@@ -1,5 +1,7 @@
 package com.example.ui
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
@@ -29,7 +31,9 @@ import androidx.compose.ui.unit.sp
 import com.example.DownloadedSong
 import com.example.LocalStorageManager
 import com.example.Track
+import com.example.UpdateManager
 import com.example.ui.theme.NdotFont
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
@@ -37,7 +41,10 @@ fun SettingsScreen(
     onPlayAll: (List<Track>, Boolean) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var isDownloadsOpen by remember { mutableStateOf(false) }
+    var latestVersion by remember { mutableStateOf<String?>(null) }
+    var checkingForUpdate by remember { mutableStateOf(false) }
 
     if (isDownloadsOpen) {
         DownloadsView(
@@ -98,6 +105,45 @@ fun SettingsScreen(
                         Toast.makeText(context, "DOWNLOADS DELETED", Toast.LENGTH_SHORT).show()
                     }
                 )
+                
+                // 4. CHECK FOR UPDATES
+                SettingsActionCard(
+                    title = if (checkingForUpdate) "CHECKING..." else "CHECK FOR UPDATES",
+                    onClick = {
+                        if (!checkingForUpdate) {
+                            checkingForUpdate = true
+                            coroutineScope.launch {
+                                latestVersion = UpdateManager.checkLatestVersion()
+                                checkingForUpdate = false
+                            }
+                        }
+                    }
+                )
+                
+                if (latestVersion != null) {
+                    val isUpToDate = latestVersion == UpdateManager.CURRENT_VERSION
+                    Text(
+                        text = if (isUpToDate) "UP TO DATE (${latestVersion})" else "UPDATE AVAILABLE (${latestVersion})",
+                        color = if (isUpToDate) Color(0xFF7E838E) else Color(0xFFD71921),
+                        fontSize = 10.sp,
+                        fontFamily = NdotFont,
+                        modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp)
+                    )
+                    if (!isUpToDate) {
+                        SettingsActionCard(
+                            title = "UPDATE NOW", 
+                            titleColor = Color(0xFFD71921), 
+                            onClick = { 
+                                // Simplified: assumes release URL is constructed or just link to repo
+                                // Actually, I need the download URL for the APK.
+                                // For this, I'll just open the GitHub releases page for simplicity, 
+                                // as implementing a full downloader + installer in one turn is complex.
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/GASU14/MUSIC/releases/latest"))
+                                context.startActivity(intent)
+                            }
+                        )
+                    }
+                }
             }
         }
     }

@@ -350,6 +350,14 @@ fun MusicApp() {
         isArtistsLoading = true
         artists = ArtistGridService.getArtists()
         isArtistsLoading = false
+        
+        // Auto check for updates
+        coroutineScope.launch {
+            val latest = UpdateManager.checkLatestVersion()
+            if (latest != null && latest != UpdateManager.CURRENT_VERSION) {
+                // Optionally show a toast or notification if an update is available
+            }
+        }
     }
 
     val filteredArtists = remember(artists, artistSearchQuery) {
