@@ -1,0 +1,6 @@
+{
+  "name": "Music",
+  "description": "A simplistic Nothing-themed music player with gesture volume control",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
